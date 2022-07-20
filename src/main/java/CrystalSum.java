@@ -3,9 +3,23 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 public class CrystalSum {
-
-
-    public static double dipolar(int comp1, int comp2, RealVector ri, RealVector rj){
+    double a=1;
+    double c=2.077294686;
+    int num_in_cell=4;
+    RealVector[] latticeVectors = new RealVector[3];
+    double[][] basis;
+    {
+        latticeVectors[0] = new ArrayRealVector(new double[]{a, 0, 0});
+        latticeVectors[1] = new ArrayRealVector(new double[]{0, a, 0});
+        latticeVectors[2] = new ArrayRealVector(new double[]{0, 0, c});
+         basis = new double[][]{
+                {0, 0, 0},
+                {0.5, 0, 0.25},
+                {0.5, 0.5, 0.5},
+                {0, 0.5, 0.75}
+        };
+    }
+    public double dipolar(int comp1, int comp2, RealVector ri, RealVector rj){
         double norm = ri.subtract(rj).getNorm();
         if (comp1==comp2){
             return (norm*norm - 3*Math.pow(ri.subtract(rj).getEntry(comp1), 2))/Math.pow(norm, 5);
@@ -14,7 +28,7 @@ public class CrystalSum {
         }
     }
 
-    public static RealVector getLocation(int n, int[] limitingBox, int num_in_cell, RealVector[] latticeVectors, double[][] basis){
+    public RealVector getLocation(int n, int[] limitingBox){
         int Lx = limitingBox[0], Ly = limitingBox[1];
         int k = ((n/num_in_cell)/Lx)/Ly/8;
         int sym_op = ((n/num_in_cell)/Lx)/Ly%8;
@@ -39,7 +53,7 @@ public class CrystalSum {
         return loc;
     }
 
-    public static double directSum(RealVector[] latticeVectors, double[][] basis, int LxStart, int LxEnd, double heightTol, double radiusTol, int num_in_cell){
+    public double directSum(int LxStart, int LxEnd, double heightTol, double radiusTol){
         RealVector origin = new ArrayRealVector(3); // constructs a vector of 3 zeros
         double prevSum=0, LzSum=0;
         for (int Lx=LxStart; Lx<=LxEnd; Lx++){
@@ -48,10 +62,10 @@ public class CrystalSum {
             LzSum=0;
             int i;
             for (i=1;; i++) {
-                RealVector ri = getLocation(i, new int[]{Lx, Ly}, num_in_cell, latticeVectors, basis);
+                RealVector ri = getLocation(i, new int[]{Lx, Ly});
                 if (ri.getSubVector(0, 2).getNorm() < Lx) {
 //                    LzSum += dipolar(2, 2, origin, ri);
-                    LzSum += calcPairSphere(origin, ri, 0.00005, num_in_cell, latticeVectors, basis);
+                    LzSum += calcPairSphere(origin, ri, 0.00005);
                 }
                 if (i % (num_in_cell * Lx * Ly * 8) == 0 && i / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
                     System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
@@ -72,7 +86,7 @@ public class CrystalSum {
         return LzSum;
     }
 
-    public static double calcPair(RealVector ri, RealVector rj, double heightTol, double radiusTol, int num_in_cell, RealVector[] latticeVectors, double[][] basis){
+    public double calcPair(RealVector ri, RealVector rj, double heightTol, double radiusTol){
         double prevSum=0, LzSum;
         for (int Lx = (int)(ri.subtract(rj).getSubVector(0,2).getNorm()+1);;Lx++){
             int Ly = Lx;
@@ -80,7 +94,7 @@ public class CrystalSum {
             LzSum=0;
             int k;
             for (k=1;;k++){
-                RealVector rk = getLocation(k, new int[]{Lx, Ly}, num_in_cell, latticeVectors, basis);
+                RealVector rk = getLocation(k, new int[]{Lx, Ly});
                 if (rk.getSubVector(0, 2).getNorm() < Lx && !ri.equals(rk) && !rj.equals(rk)){
                     LzSum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj);
                 }
@@ -101,7 +115,7 @@ public class CrystalSum {
         return LzSum;
     }
 
-    public static double calcPairSphere(RealVector ri, RealVector rj, double radiusTol, int num_in_cell, RealVector[] latticeVectors, double[][] basis){
+    public double calcPairSphere(RealVector ri, RealVector rj, double radiusTol){
         // find center
         RealVector center = ri.add(rj).mapDivide(2.0);
         // find closest lattice point to center
@@ -119,7 +133,7 @@ public class CrystalSum {
             int k;
             sum=0;
             for (k=0;k<num_in_cell*L*L*L*8;k++){
-                RealVector rkRelToCntr = getLocation(k, new int[]{L, L}, num_in_cell, latticeVectors, basis);
+                RealVector rkRelToCntr = getLocation(k, new int[]{L, L});
                 RealVector rk = center.add(rkRelToCntr);
                 if (rkRelToCntr.getNorm() < L && !ri.equals(rk) && !rj.equals(rk)){
                     sum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj);
@@ -135,20 +149,8 @@ public class CrystalSum {
     }
 
     public static void main(String[] args){
-        double a=1;
-        double c=2.077294686;
-        int num_in_cell=4;
-        RealVector[] latticeVectors = new RealVector[3];
-        latticeVectors[0] = new ArrayRealVector(new double[]{a, 0, 0});
-        latticeVectors[1] = new ArrayRealVector(new double[]{0, a, 0});
-        latticeVectors[2] = new ArrayRealVector(new double[]{0, 0, c});
-        double[][] basis = {
-            {0,0,0},
-            {0.5,0,0.25},
-            {0.5,0.5,0.5},
-            {0,0.5,0.75}
-        };
         int Lx = Integer.parseInt(args[0]);
-        System.out.println(directSum(latticeVectors, basis, Lx, Lx, 0.00005, 0.005, num_in_cell));
+        CrystalSum cs = new CrystalSum();
+        System.out.println(cs.directSum(Lx, Lx, 0.00005, 0.005));
     }
 }
