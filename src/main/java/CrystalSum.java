@@ -51,7 +51,7 @@ public class CrystalSum {
                 RealVector ri = getLocation(i, new int[]{Lx, Ly}, num_in_cell, latticeVectors, basis);
                 if (ri.getSubVector(0, 2).getNorm() < Lx) {
 //                    LzSum += dipolar(2, 2, origin, ri);
-                    LzSum += calcPair(origin, ri, 0.00000005, 0.00005, num_in_cell, latticeVectors, basis);
+                    LzSum += calcPairSphere(origin, ri, 0.00005, num_in_cell, latticeVectors, basis);
                 }
                 if (i % (num_in_cell * Lx * Ly * 8) == 0 && i / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
                     System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
@@ -99,6 +99,39 @@ public class CrystalSum {
             prevSum=LzSum;
         }
         return LzSum;
+    }
+
+    public static double calcPairSphere(RealVector ri, RealVector rj, double radiusTol, int num_in_cell, RealVector[] latticeVectors, double[][] basis){
+        // find center
+        RealVector center = ri.add(rj).mapDivide(2.0);
+        // find closest lattice point to center
+        int[] cntrCoordinates = new int[3];
+        for (int c=0;c< cntrCoordinates.length; c++) {
+            cntrCoordinates[c] = (int) Math.floor(center.dotProduct(latticeVectors[c].unitVector()) / latticeVectors[c].getNorm());
+        }
+        center = new ArrayRealVector(3);
+        for (int c=0;c< cntrCoordinates.length; c++) {
+            center.combineToSelf(1, cntrCoordinates[c], latticeVectors[c]);
+        }
+        double prevSum=0, sum;
+        for (int L = 2*(int)Math.ceil(ri.subtract(rj).getNorm());;L++){
+            // L is the linear size of the bounding box
+            int k;
+            sum=0;
+            for (k=0;k<num_in_cell*L*L*L*8;k++){
+                RealVector rkRelToCntr = getLocation(k, new int[]{L, L}, num_in_cell, latticeVectors, basis);
+                RealVector rk = center.add(rkRelToCntr);
+                if (rkRelToCntr.getNorm() < L && !ri.equals(rk) && !rj.equals(rk)){
+                    sum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj);
+                }
+            }
+            if (Math.abs((sum - prevSum)/sum) < radiusTol){ // convergence
+//                System.out.println("Radius convergence!! \t L\t" + L + " sum\t " + sum);
+                break;
+            }
+            prevSum=sum;
+        }
+        return sum;
     }
 
     public static void main(String[] args){
