@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="sge250.bgu.ac.il" id="625cd01b-1b77-4be2-b9a8-9b0ad3b1fe40" port="22" nameFormat="DESCRIPTIVE" username="tomerdol" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

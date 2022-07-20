@@ -39,10 +39,10 @@ public class CrystalSum {
         return loc;
     }
 
-    public static double directSum(RealVector[] latticeVectors, double[][] basis, double heightTol, double radiusTol, int num_in_cell){
+    public static double directSum(RealVector[] latticeVectors, double[][] basis, int LxStart, int LxEnd, double heightTol, double radiusTol, int num_in_cell){
         RealVector origin = new ArrayRealVector(3); // constructs a vector of 3 zeros
         double prevSum=0, LzSum=0;
-        for (int Lx=1; Lx<300; Lx++){
+        for (int Lx=LxStart; Lx<=LxEnd; Lx++){
             int Ly=Lx;
             double prevLzSum=0;
             LzSum=0;
@@ -148,8 +148,7 @@ public class CrystalSum {
             {0.5,0.5,0.5},
             {0,0.5,0.75}
         };
-
-        RealVector origin = new ArrayRealVector(3); // constructs a vector of 3 zeros
-        System.out.println(directSum(latticeVectors, basis, 0.005, 0.005, num_in_cell));
+        int Lx = Integer.parseInt(args[0]);
+        System.out.println(directSum(latticeVectors, basis, Lx, Lx, 0.00005, 0.005, num_in_cell));
     }
 }

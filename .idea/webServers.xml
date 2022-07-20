@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="983e72f9-b111-4f2b-9769-c60dd55f3263" name="sge250">
+        <fileTransfer rootFolder="/gpfs0/smoshe/users/tomerdol/home" accessType="SFTP" host="sge250.bgu.ac.il" port="22" sshConfigId="625cd01b-1b77-4be2-b9a8-9b0ad3b1fe40" sshConfig="tomerdol@sge250.bgu.ac.il:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
