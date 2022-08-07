@@ -65,7 +65,7 @@ public class CrystalSum {
                 RealVector ri = getLocation(i, new int[]{Lx, Ly});
                 if (ri.getSubVector(0, 2).getNorm() < Lx) {
 //                    LzSum += dipolar(2, 2, origin, ri);
-                    LzSum += calcPairSphere(origin, ri, 0.00005);
+                    LzSum += calcPair(origin, ri, 0.00005, 0.00005);
                 }
                 if (i % (num_in_cell * Lx * Ly * 8) == 0 && i / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
                     System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
@@ -96,7 +96,7 @@ public class CrystalSum {
             for (k=1;;k++){
                 RealVector rk = getLocation(k, new int[]{Lx, Ly});
                 if (rk.getSubVector(0, 2).getNorm() < Lx && !ri.equals(rk) && !rj.equals(rk)){
-                    LzSum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj);
+                    LzSum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj) + dipolar(1, 2, ri,rk) * dipolar(1, 2, rk,rj);
                 }
                 if (k % (num_in_cell * Lx * Ly * 8) == 0 && k / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
                     if (Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
@@ -136,7 +136,7 @@ public class CrystalSum {
                 RealVector rkRelToCntr = getLocation(k, new int[]{L, L});
                 RealVector rk = center.add(rkRelToCntr);
                 if (rkRelToCntr.getNorm() < L && !ri.equals(rk) && !rj.equals(rk)){
-                    sum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj);
+                    sum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj) + dipolar(1, 2, ri,rk) * dipolar(1, 2, rk,rj);
                 }
             }
             if (Math.abs((sum - prevSum)/sum) < radiusTol){ // convergence
@@ -151,6 +151,8 @@ public class CrystalSum {
     public static void main(String[] args){
         int Lx = Integer.parseInt(args[0]);
         CrystalSum cs = new CrystalSum();
-        System.out.println(cs.directSum(Lx, Lx, 0.00005, 0.005));
+//        System.out.println(cs.directSum(Lx, Lx, 0.00005, 0.005));
+        System.out.println(cs.calcPair(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{0.5,0,0.25*cs.c}), 0.00005, 0.005));
+//        System.out.println(cs.calcPairSphere(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{0.5,0,0.25*cs.c}), 0.0000005));
     }
 }
