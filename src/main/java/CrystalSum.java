@@ -53,7 +53,17 @@ public class CrystalSum {
         return loc;
     }
 
-    public double directSum(int LxStart, int LxEnd, double heightTol, double radiusTol){
+    public static int coordinateToInt(char r){
+        switch(r) {
+            case 'x': return 0;
+            case 'y': return 1;
+            case 'z': return 2;
+        }
+        // error
+        return -1;
+    }
+
+    public double directSum(int LxStart, int LxEnd, double heightTol, double radiusTol, char[] interaction){
         RealVector origin = new ArrayRealVector(3); // constructs a vector of 3 zeros
         double prevSum=0, LzSum=0;
         for (int Lx=LxStart; Lx<=LxEnd; Lx++){
@@ -64,19 +74,29 @@ public class CrystalSum {
             for (i=1;; i++) {
                 RealVector ri = getLocation(i, new int[]{Lx, Ly});
                 if (ri.getSubVector(0, 2).getNorm() < Lx) {
-//                    LzSum += dipolar(2, 2, origin, ri);
-                    LzSum += calcPair(origin, ri, 0.00005, 0.00005);
+                    if (interaction.length == 4) {
+                        LzSum += dipolar(coordinateToInt(interaction[2]), coordinateToInt(interaction[3]), origin, ri);
+                    }
+                    else if (interaction[4] == 'i' && interaction[5] == 'j'){
+                        LzSum += dipolar(coordinateToInt(interaction[2]), coordinateToInt(interaction[3]), origin, ri)*dipolar(coordinateToInt(interaction[6]), coordinateToInt(interaction[7]), origin, ri);
+                    } else if (interaction[4] == 'i' && interaction[5] == 'k'){
+                        LzSum += calcPair(origin, ri, 0.05, 0.05, interaction, true);
+                    } else if (interaction[4] == 'j' && interaction[5] == 'k'){
+                        LzSum += calcPair(origin, ri, 0.05, 0.05, interaction, false);
+                    }
+//                    LzSum += dipolar(1, 2, origin, ri);//*dipolar(1, 0, origin, ri);
+//                    LzSum += calcPair(origin, ri, 0.05, 0.005);
                 }
                 if (i % (num_in_cell * Lx * Ly * 8) == 0 && i / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
                     System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
-                    if (Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
+                    if ((i>100 && Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
                         System.out.println("Lz convergence! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                         break;
                     }
                     prevLzSum = LzSum;
                 }
             }
-            if (Math.abs((LzSum - prevSum)/LzSum) < radiusTol){
+            if ((Lx>3 && Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevSum)/LzSum) < radiusTol){
                 System.out.println("Lx convergence!! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                 break;
             }
@@ -86,7 +106,7 @@ public class CrystalSum {
         return LzSum;
     }
 
-    public double calcPair(RealVector ri, RealVector rj, double heightTol, double radiusTol){
+    public double calcPair(RealVector ri, RealVector rj, double heightTol, double radiusTol, char[] interaction, boolean bothWithRi){
         double prevSum=0, LzSum;
         for (int Lx = (int)(ri.subtract(rj).getSubVector(0,2).getNorm()+1);;Lx++){
             int Ly = Lx;
@@ -96,17 +116,23 @@ public class CrystalSum {
             for (k=1;;k++){
                 RealVector rk = getLocation(k, new int[]{Lx, Ly});
                 if (rk.getSubVector(0, 2).getNorm() < Lx && !ri.equals(rk) && !rj.equals(rk)){
-                    LzSum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj) + dipolar(1, 2, ri,rk) * dipolar(1, 2, rk,rj);
+//                    LzSum += dipolar(0, 2, ri,rk) * dipolar(0, 2, rk,rj) + dipolar(1, 2, ri,rk) * dipolar(1, 2, rk,rj);
+//                    System.out.println(dipolar(1, 2, ri,rk) * dipolar(0, 2, rk,rj));
+                    if (bothWithRi) {
+                        LzSum += dipolar(coordinateToInt(interaction[2]), coordinateToInt(interaction[3]), ri, rk) * dipolar(coordinateToInt(interaction[6]),coordinateToInt(interaction[7]), ri, rj);
+                    } else {
+                        LzSum += dipolar(coordinateToInt(interaction[2]), coordinateToInt(interaction[3]), ri, rk) * dipolar(coordinateToInt(interaction[6]),coordinateToInt(interaction[7]), rk, rj);
+                    }
                 }
                 if (k % (num_in_cell * Lx * Ly * 8) == 0 && k / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
-                    if (Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
+                    if ((Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
 //                        System.out.println("Lz convergence! \t Lx\t" + Lx + " Lz\t" + (k / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                         break;
                     }
                     prevLzSum = LzSum;
                 }
             }
-            if (Math.abs((LzSum - prevSum)/LzSum) < radiusTol){
+            if ((Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevSum)/LzSum) < radiusTol){
 //                System.out.println("Lx convergence!! \t Lx\t" + Lx + " Lz\t" + (k / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                 break;
             }
@@ -149,10 +175,110 @@ public class CrystalSum {
     }
 
     public static void main(String[] args){
-        int Lx = Integer.parseInt(args[0]);
+        //int Lx = Integer.parseInt(args[0]);
         CrystalSum cs = new CrystalSum();
-//        System.out.println(cs.directSum(Lx, Lx, 0.00005, 0.005));
-        System.out.println(cs.calcPair(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{0.5,0,0.25*cs.c}), 0.00005, 0.005));
+        char[][] interactions = new char[][]{
+                /*{'i','j','x','x'},
+                {'i','j','x','y'},
+                {'i','j','x','z'},
+                {'i','j','y','y'},
+                {'i','j','y','z'},
+                {'i','j','z','z'},
+                {'i','j','x','x','i','j','x','y'},
+                {'i','j','x','x','i','j','x','z'},
+                {'i','j','x','y','i','j','x','z'},
+                {'i','j','x','x','i','j','y','y'},
+                {'i','j','x','y','i','j','y','y'},
+                {'i','j','x','z','i','j','y','y'},
+                {'i','j','x','x','i','j','y','z'},
+                {'i','j','x','y','i','j','y','z'},
+                {'i','j','x','z','i','j','y','z'},
+                {'i','j','y','y','i','j','y','z'},
+                {'i','j','x','x','i','j','z','z'},
+                {'i','j','x','y','i','j','z','z'},
+                {'i','j','x','z','i','j','z','z'},
+                {'i','j','y','y','i','j','z','z'},
+                {'i','j','y','z','i','j','z','z'},
+                {'i','j','x','x','i','k','x','x'},
+                {'i','j','x','y','i','k','x','x'},
+                {'i','j','x','z','i','k','x','x'},
+                {'i','j','y','y','i','k','x','x'},
+                {'i','j','y','z','i','k','x','x'},
+                {'i','j','z','z','i','k','x','x'},
+                {'i','j','x','x','i','k','x','y'},
+                {'i','j','x','y','i','k','x','y'},
+                {'i','j','x','z','i','k','x','y'},
+                {'i','j','y','y','i','k','x','y'},
+                {'i','j','y','z','i','k','x','y'},
+                {'i','j','z','z','i','k','x','y'},
+                {'i','j','x','x','i','k','x','z'},
+                {'i','j','x','y','i','k','x','z'},
+                {'i','j','x','z','i','k','x','z'},
+                {'i','j','y','y','i','k','x','z'},
+                {'i','j','y','z','i','k','x','z'},
+                {'i','j','z','z','i','k','x','z'},
+                {'i','j','x','x','i','k','y','y'},
+                {'i','j','x','y','i','k','y','y'},
+                {'i','j','x','z','i','k','y','y'},
+                {'i','j','y','y','i','k','y','y'},
+                {'i','j','y','z','i','k','y','y'},
+                {'i','j','z','z','i','k','y','y'},
+                {'i','j','x','x','i','k','y','z'},
+                {'i','j','x','y','i','k','y','z'},
+                {'i','j','x','z','i','k','y','z'},
+                {'i','j','y','y','i','k','y','z'},
+                {'i','j','y','z','i','k','y','z'},
+                {'i','j','z','z','i','k','y','z'},
+                {'i','j','x','x','i','k','z','z'},
+                {'i','j','x','y','i','k','z','z'},
+                {'i','j','x','z','i','k','z','z'},
+                {'i','j','y','y','i','k','z','z'},
+                {'i','j','y','z','i','k','z','z'},
+                {'i','j','z','z','i','k','z','z'},*/
+//                {'i','j','x','x','j','k','x','x'},
+                {'i','j','x','y','j','k','x','x'},
+                {'i','j','x','z','j','k','x','x'},
+                {'i','j','y','y','j','k','x','x'},
+                {'i','j','y','z','j','k','x','x'},
+                {'i','j','z','z','j','k','x','x'},
+                {'i','j','x','x','j','k','x','y'},
+                {'i','j','x','y','j','k','x','y'},
+                {'i','j','x','z','j','k','x','y'},
+                {'i','j','y','y','j','k','x','y'},
+                {'i','j','y','z','j','k','x','y'},
+                {'i','j','z','z','j','k','x','y'},
+                {'i','j','x','x','j','k','x','z'},
+                {'i','j','x','y','j','k','x','z'},
+                {'i','j','x','z','j','k','x','z'},
+                {'i','j','y','y','j','k','x','z'},
+                {'i','j','y','z','j','k','x','z'},
+                {'i','j','z','z','j','k','x','z'},
+                {'i','j','x','x','j','k','y','y'},
+                {'i','j','x','y','j','k','y','y'},
+                {'i','j','x','z','j','k','y','y'},
+                {'i','j','y','y','j','k','y','y'},
+                {'i','j','y','z','j','k','y','y'},
+                {'i','j','z','z','j','k','y','y'},
+                {'i','j','x','x','j','k','y','z'},
+                {'i','j','x','y','j','k','y','z'},
+                {'i','j','x','z','j','k','y','z'},
+                {'i','j','y','y','j','k','y','z'},
+                {'i','j','y','z','j','k','y','z'},
+                {'i','j','z','z','j','k','y','z'},
+                {'i','j','x','x','j','k','z','z'},
+                {'i','j','x','y','j','k','z','z'},
+                {'i','j','x','z','j','k','z','z'},
+                {'i','j','y','y','j','k','z','z'},
+                {'i','j','y','z','j','k','z','z'},
+                {'i','j','z','z','j','k','z','z'}
+        };
+//        System.out.println(cs.directSum(Lx, Lx, 0.00000005, 0.0000005));
+        for (char[] interaction : interactions) {
+            System.out.println(String.format("V[%c,%c,%c,%c] V[%c,%c,%c,%c] -> factor (",interaction[0],interaction[1],interaction[2],interaction[3],interaction[4],interaction[5],interaction[6],interaction[7])
+//            System.out.println(String.format("V[%c,%c,%c,%c] -> Sqrt[factor] (",interaction[0],interaction[1],interaction[2],interaction[3])
+                    + cs.directSum(3, 7, 0.05, 0.05, interaction) + "), ");
+        }
+//        System.out.println(cs.calcPair(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{1,0,0}), 0.00000005, 0.0005));
 //        System.out.println(cs.calcPairSphere(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{0.5,0,0.25*cs.c}), 0.0000005));
     }
 }
