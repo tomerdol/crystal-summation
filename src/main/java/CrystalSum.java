@@ -2,6 +2,8 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
+import java.util.ArrayList;
+
 public class CrystalSum {
     double a=1;
     double c=2.077294686;
@@ -80,24 +82,24 @@ public class CrystalSum {
                     else if (interaction[4] == 'i' && interaction[5] == 'j'){
                         LzSum += dipolar(coordinateToInt(interaction[2]), coordinateToInt(interaction[3]), origin, ri)*dipolar(coordinateToInt(interaction[6]), coordinateToInt(interaction[7]), origin, ri);
                     } else if (interaction[4] == 'i' && interaction[5] == 'k'){
-                        LzSum += calcPair(origin, ri, 0.05, 0.05, interaction, true);
+                        LzSum += calcPair(origin, ri, 0.005, 0.005, interaction, true);
                     } else if (interaction[4] == 'j' && interaction[5] == 'k'){
-                        LzSum += calcPair(origin, ri, 0.05, 0.05, interaction, false);
+                        LzSum += calcPair(origin, ri, 0.005, 0.005, interaction, false);
                     }
 //                    LzSum += dipolar(1, 2, origin, ri);//*dipolar(1, 0, origin, ri);
 //                    LzSum += calcPair(origin, ri, 0.05, 0.005);
                 }
                 if (i % (num_in_cell * Lx * Ly * 8) == 0 && i / (num_in_cell * Lx * Ly * 8) > Lx) {    // a new "floor" is added at the top and bottom AND the height of the cylinder is larger than its basis radius
-                    System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
+//                    System.out.println("Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                     if ((i>100 && Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevLzSum)/LzSum) < heightTol) {  // convergence
-                        System.out.println("Lz convergence! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
+//                        System.out.println("Lz convergence! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                         break;
                     }
                     prevLzSum = LzSum;
                 }
             }
             if ((Lx>3 && Math.abs(LzSum) < 1e-15) || Math.abs((LzSum - prevSum)/LzSum) < radiusTol){
-                System.out.println("Lx convergence!! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
+//                System.out.println("Lx convergence!! \t Lx\t" + Lx + " Lz\t" + (i / (num_in_cell * Lx * Ly * 8)) + " Lz_sum\t " + LzSum);
                 break;
             }
             prevSum=LzSum;
@@ -177,107 +179,118 @@ public class CrystalSum {
     public static void main(String[] args){
         //int Lx = Integer.parseInt(args[0]);
         CrystalSum cs = new CrystalSum();
-        char[][] interactions = new char[][]{
-                /*{'i','j','x','x'},
-                {'i','j','x','y'},
-                {'i','j','x','z'},
-                {'i','j','y','y'},
-                {'i','j','y','z'},
-                {'i','j','z','z'},
-                {'i','j','x','x','i','j','x','y'},
-                {'i','j','x','x','i','j','x','z'},
-                {'i','j','x','y','i','j','x','z'},
-                {'i','j','x','x','i','j','y','y'},
-                {'i','j','x','y','i','j','y','y'},
-                {'i','j','x','z','i','j','y','y'},
-                {'i','j','x','x','i','j','y','z'},
-                {'i','j','x','y','i','j','y','z'},
-                {'i','j','x','z','i','j','y','z'},
-                {'i','j','y','y','i','j','y','z'},
-                {'i','j','x','x','i','j','z','z'},
-                {'i','j','x','y','i','j','z','z'},
-                {'i','j','x','z','i','j','z','z'},
-                {'i','j','y','y','i','j','z','z'},
-                {'i','j','y','z','i','j','z','z'},
-                {'i','j','x','x','i','k','x','x'},
-                {'i','j','x','y','i','k','x','x'},
-                {'i','j','x','z','i','k','x','x'},
-                {'i','j','y','y','i','k','x','x'},
-                {'i','j','y','z','i','k','x','x'},
-                {'i','j','z','z','i','k','x','x'},
-                {'i','j','x','x','i','k','x','y'},
-                {'i','j','x','y','i','k','x','y'},
-                {'i','j','x','z','i','k','x','y'},
-                {'i','j','y','y','i','k','x','y'},
-                {'i','j','y','z','i','k','x','y'},
-                {'i','j','z','z','i','k','x','y'},
-                {'i','j','x','x','i','k','x','z'},
-                {'i','j','x','y','i','k','x','z'},
-                {'i','j','x','z','i','k','x','z'},
-                {'i','j','y','y','i','k','x','z'},
-                {'i','j','y','z','i','k','x','z'},
-                {'i','j','z','z','i','k','x','z'},
-                {'i','j','x','x','i','k','y','y'},
-                {'i','j','x','y','i','k','y','y'},
-                {'i','j','x','z','i','k','y','y'},
-                {'i','j','y','y','i','k','y','y'},
-                {'i','j','y','z','i','k','y','y'},
-                {'i','j','z','z','i','k','y','y'},
-                {'i','j','x','x','i','k','y','z'},
-                {'i','j','x','y','i','k','y','z'},
-                {'i','j','x','z','i','k','y','z'},
-                {'i','j','y','y','i','k','y','z'},
-                {'i','j','y','z','i','k','y','z'},
-                {'i','j','z','z','i','k','y','z'},
-                {'i','j','x','x','i','k','z','z'},
-                {'i','j','x','y','i','k','z','z'},
-                {'i','j','x','z','i','k','z','z'},
-                {'i','j','y','y','i','k','z','z'},
-                {'i','j','y','z','i','k','z','z'},
-                {'i','j','z','z','i','k','z','z'},*/
-//                {'i','j','x','x','j','k','x','x'},
-                {'i','j','x','y','j','k','x','x'},
-                {'i','j','x','z','j','k','x','x'},
-                {'i','j','y','y','j','k','x','x'},
-                {'i','j','y','z','j','k','x','x'},
-                {'i','j','z','z','j','k','x','x'},
-                {'i','j','x','x','j','k','x','y'},
-                {'i','j','x','y','j','k','x','y'},
-                {'i','j','x','z','j','k','x','y'},
-                {'i','j','y','y','j','k','x','y'},
-                {'i','j','y','z','j','k','x','y'},
-                {'i','j','z','z','j','k','x','y'},
-                {'i','j','x','x','j','k','x','z'},
-                {'i','j','x','y','j','k','x','z'},
-                {'i','j','x','z','j','k','x','z'},
-                {'i','j','y','y','j','k','x','z'},
-                {'i','j','y','z','j','k','x','z'},
-                {'i','j','z','z','j','k','x','z'},
-                {'i','j','x','x','j','k','y','y'},
-                {'i','j','x','y','j','k','y','y'},
-                {'i','j','x','z','j','k','y','y'},
-                {'i','j','y','y','j','k','y','y'},
-                {'i','j','y','z','j','k','y','y'},
-                {'i','j','z','z','j','k','y','y'},
-                {'i','j','x','x','j','k','y','z'},
-                {'i','j','x','y','j','k','y','z'},
-                {'i','j','x','z','j','k','y','z'},
-                {'i','j','y','y','j','k','y','z'},
-                {'i','j','y','z','j','k','y','z'},
-                {'i','j','z','z','j','k','y','z'},
-                {'i','j','x','x','j','k','z','z'},
-                {'i','j','x','y','j','k','z','z'},
-                {'i','j','x','z','j','k','z','z'},
-                {'i','j','y','y','j','k','z','z'},
-                {'i','j','y','z','j','k','z','z'},
-                {'i','j','z','z','j','k','z','z'}
-        };
+        final ArrayList<char[]> interactions = new ArrayList<char[]>() {{
+/*            add(new char[] {'i','j','x','x'});
+            add(new char[] {'i','j','x','y'});
+            add(new char[] {'i','j','x','z'});
+            add(new char[] {'i','j','y','y'});
+            add(new char[] {'i','j','y','z'});
+            add(new char[] {'i','j','z','z'});
+            add(new char[] {'i','j','x','x','i','j','x','y'});
+            add(new char[] {'i','j','x','x','i','j','x','z'});
+            add(new char[] {'i','j','x','y','i','j','x','z'});
+            add(new char[] {'i','j','x','x','i','j','y','y'});
+            add(new char[] {'i','j','x','y','i','j','y','y'});
+            add(new char[] {'i','j','x','z','i','j','y','y'});
+            add(new char[] {'i','j','x','x','i','j','y','z'});
+            add(new char[] {'i','j','x','y','i','j','y','z'});
+            add(new char[] {'i','j','x','z','i','j','y','z'});
+            add(new char[] {'i','j','y','y','i','j','y','z'});
+            add(new char[] {'i','j','x','x','i','j','z','z'});
+            add(new char[] {'i','j','x','y','i','j','z','z'});
+            add(new char[] {'i','j','x','z','i','j','z','z'});
+            add(new char[] {'i','j','y','y','i','j','z','z'});
+            add(new char[] {'i','j','y','z','i','j','z','z'});
+            add(new char[] {'i','j','x','x','i','k','x','x'});
+            add(new char[] {'i','j','x','y','i','k','x','x'});
+            add(new char[] {'i','j','x','z','i','k','x','x'});
+            add(new char[] {'i','j','y','y','i','k','x','x'});
+            add(new char[] {'i','j','y','z','i','k','x','x'});
+            add(new char[] {'i','j','z','z','i','k','x','x'});
+            add(new char[] {'i','j','x','x','i','k','x','y'});
+            add(new char[] {'i','j','x','y','i','k','x','y'});
+            add(new char[] {'i','j','x','z','i','k','x','y'});
+            add(new char[] {'i','j','y','y','i','k','x','y'});
+            add(new char[] {'i','j','y','z','i','k','x','y'});
+            add(new char[] {'i','j','z','z','i','k','x','y'});
+            add(new char[] {'i','j','x','x','i','k','x','z'});
+            add(new char[] {'i','j','x','y','i','k','x','z'});
+            add(new char[] {'i','j','x','z','i','k','x','z'});
+            add(new char[] {'i','j','y','y','i','k','x','z'});
+            add(new char[] {'i','j','y','z','i','k','x','z'});
+            add(new char[] {'i','j','z','z','i','k','x','z'});
+            add(new char[] {'i','j','x','x','i','k','y','y'});
+            add(new char[] {'i','j','x','y','i','k','y','y'});
+            add(new char[] {'i','j','x','z','i','k','y','y'});
+            add(new char[] {'i','j','y','y','i','k','y','y'});
+            add(new char[] {'i','j','y','z','i','k','y','y'});
+            add(new char[] {'i','j','z','z','i','k','y','y'});
+            add(new char[] {'i','j','x','x','i','k','y','z'});
+            add(new char[] {'i','j','x','y','i','k','y','z'});
+            add(new char[] {'i','j','x','z','i','k','y','z'});
+            add(new char[] {'i','j','y','y','i','k','y','z'});
+            add(new char[] {'i','j','y','z','i','k','y','z'});
+            add(new char[] {'i','j','z','z','i','k','y','z'});
+            add(new char[] {'i','j','x','x','i','k','z','z'});
+            add(new char[] {'i','j','x','y','i','k','z','z'});
+            add(new char[] {'i','j','x','z','i','k','z','z'});
+            add(new char[] {'i','j','y','y','i','k','z','z'});
+            add(new char[] {'i','j','y','z','i','k','z','z'});
+            add(new char[] {'i','j','z','z','i','k','z','z'});
+            add(new char[] {'i','j','x','x','j','k','x','x'});
+            add(new char[] {'i','j','x','y','j','k','x','x'});
+            add(new char[] {'i','j','x','z','j','k','x','x'});
+            add(new char[] {'i','j','y','y','j','k','x','x'});
+            add(new char[] {'i','j','y','z','j','k','x','x'});
+            add(new char[] {'i','j','z','z','j','k','x','x'});
+            add(new char[] {'i','j','x','x','j','k','x','y'});
+            add(new char[] {'i','j','x','y','j','k','x','y'});
+            add(new char[] {'i','j','x','z','j','k','x','y'});
+            add(new char[] {'i','j','y','y','j','k','x','y'});
+            add(new char[] {'i','j','y','z','j','k','x','y'});
+            add(new char[] {'i','j','z','z','j','k','x','y'});
+            add(new char[] {'i','j','x','x','j','k','x','z'});
+            add(new char[] {'i','j','x','y','j','k','x','z'});
+            add(new char[] {'i','j','x','z','j','k','x','z'});
+            add(new char[] {'i','j','y','y','j','k','x','z'});
+            add(new char[] {'i','j','y','z','j','k','x','z'});
+            add(new char[] {'i','j','z','z','j','k','x','z'});
+            add(new char[] {'i','j','x','x','j','k','y','y'});
+            add(new char[] {'i','j','x','y','j','k','y','y'});
+            add(new char[] {'i','j','x','z','j','k','y','y'});
+            add(new char[] {'i','j','y','y','j','k','y','y'});
+            add(new char[] {'i','j','y','z','j','k','y','y'});
+            add(new char[] {'i','j','z','z','j','k','y','y'});
+            add(new char[] {'i','j','x','x','j','k','y','z'});
+            add(new char[] {'i','j','x','y','j','k','y','z'});
+            add(new char[] {'i','j','x','z','j','k','y','z'});
+            add(new char[] {'i','j','y','y','j','k','y','z'});
+            add(new char[] {'i','j','y','z','j','k','y','z'});
+            add(new char[] {'i','j','z','z','j','k','y','z'});
+            add(new char[] {'i','j','x','x','j','k','z','z'});
+            add(new char[] {'i','j','x','y','j','k','z','z'});
+            add(new char[] {'i','j','x','z','j','k','z','z'});
+            add(new char[] {'i','j','y','y','j','k','z','z'});
+            add(new char[] {'i','j','y','z','j','k','z','z'});
+            add(new char[] {'i','j','z','z','j','k','z','z'});
+*/
+            add(new char[] {'i','j','x','x','i','j','x','x'});
+            add(new char[] {'i','j','x','y','i','j','x','y'});
+            add(new char[] {'i','j','x','z','i','j','x','z'});
+            add(new char[] {'i','j','y','y','i','j','y','y'});
+            add(new char[] {'i','j','y','z','i','j','y','z'});
+            add(new char[] {'i','j','z','z','i','j','z','z'});
+        }};
 //        System.out.println(cs.directSum(Lx, Lx, 0.00000005, 0.0000005));
-        for (char[] interaction : interactions) {
-            System.out.println(String.format("V[%c,%c,%c,%c] V[%c,%c,%c,%c] -> factor (",interaction[0],interaction[1],interaction[2],interaction[3],interaction[4],interaction[5],interaction[6],interaction[7])
-//            System.out.println(String.format("V[%c,%c,%c,%c] -> Sqrt[factor] (",interaction[0],interaction[1],interaction[2],interaction[3])
-                    + cs.directSum(3, 7, 0.05, 0.05, interaction) + "), ");
-        }
+        interactions.parallelStream().forEach( interaction ->{
+            if (interaction.length==8) {
+                System.out.println(String.format("V[%c,%c,%c,%c] V[%c,%c,%c,%c] -> factor (", interaction[0], interaction[1], interaction[2], interaction[3], interaction[4], interaction[5], interaction[6], interaction[7])
+                        + cs.directSum(3, 8, 0.005, 0.005, interaction) + "), ");
+            } else {
+                    System.out.println(String.format("V[%c,%c,%c,%c] -> Sqrt[factor] (", interaction[0], interaction[1], interaction[2], interaction[3])
+                            + cs.directSum(3, 8, 0.005, 0.005, interaction) + "), ");
+            }
+        });
 //        System.out.println(cs.calcPair(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{1,0,0}), 0.00000005, 0.0005));
 //        System.out.println(cs.calcPairSphere(new ArrayRealVector(new double[]{0,0,0}), new ArrayRealVector(new double[]{0.5,0,0.25*cs.c}), 0.0000005));
     }
