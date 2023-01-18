@@ -1,24 +1,18 @@
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 
-public class CrystalSum {
-    double a=1;
-    double c=2.077294686;
-    int num_in_cell=4;
+public class CrystalSumFe8 {
+    int num_in_cell=1;
     RealVector[] latticeVectors = new RealVector[3];
     double[][] basis;
     {
-        latticeVectors[0] = new ArrayRealVector(new double[]{a, 0, 0});
-        latticeVectors[1] = new ArrayRealVector(new double[]{0, a, 0});
-        latticeVectors[2] = new ArrayRealVector(new double[]{0, 0, c});
+        latticeVectors[0] = new ArrayRealVector(new double[]{1.2676399478585705,0.39071827411333043,-0.07965196320688474});
+        latticeVectors[1] = new ArrayRealVector(new double[]{-0.44183577847448624,1.274681524880277,-0.4848259797892014});
+        latticeVectors[2] = new ArrayRealVector(new double[]{-0.25857698036738,-0.09182746019752541,0.9603430499711932});
          basis = new double[][]{
-                {0, 0, 0},
-                {0.5, 0, 0.25},
-                {0.5, 0.5, 0.5},
-                {0, 0.5, 0.75}
+                {0, 0, 0}
         };
     }
     public double dipolar(int comp1, int comp2, RealVector ri, RealVector rj){
@@ -207,7 +201,7 @@ public class CrystalSum {
 
     public static void main(String[] args){
         //int Lx = Integer.parseInt(args[0]);
-        CrystalSum cs = new CrystalSum();
+        CrystalSumFe8 cs = new CrystalSumFe8();
 //        final ArrayList<char[]> interactions = new ArrayList<char[]>() {{
 //            add(new char[] {'i','j','x','x','i','j','y','y'});
 //            add(new char[] {'i','j','x','y','i','j','y','y'});
@@ -253,6 +247,7 @@ public class CrystalSum {
                 for (int k=0;k<coords.length;k++){
                     for (int l=0;l<coords.length;l++){
                         interactions.add(new char[] {'i','j',coords[i],coords[j],'i','j',coords[k],coords[l]});
+//                interactions.add(new char[] {'i','j',coords[i],coords[j]});
                     }
                 }
             }
